@@ -1,0 +1,43 @@
+global:
+  resolve_timeout: 1m  # explanation: Wait time before marking an alert as resolved after it stops firing
+
+route:
+  group_by: ['alertname', 'service']  # explanation: Group alerts with same alertname & service together
+  group_wait: 10s                     # explanation: Wait before sending first alert (batching)
+  group_interval: 1m                  # explanation: Wait before sending new alerts in same group
+  repeat_interval: 2m                 # explanation: Time before re-sending same alert
+
+  receiver: 'webhook-remediation'     # explanation: Default receiver (fallback if no route matches)
+
+  routes:
+    - match:
+        severity: critical
+      receiver: 'webhook-remediation'  # explanation: Critical alerts go to auto-healing webhook
+      continue: true                   # explanation: Continue processing so same alert also goes to Telegram
+
+    - match:
+        severity: critical
+      receiver: 'telegram'             # explanation: Send critical alerts to Telegram
+
+    - match:
+        severity: warning
+      receiver: 'telegram'             # explanation: Send warning alerts only to Telegram (no auto-healing)
+
+receivers:
+  - name: 'webhook-remediation'
+    webhook_configs:
+      - url: 'http://webhook-receiver:5001/webhook'
+        send_resolved: false
+
+  - name: 'telegram'
+    webhook_configs:
+      # Trailing / — WHY: bridge listens on root path for Alertmanager webhook POST body
+      - url: 'http://alertmanager-bot:8080/'
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['service']
+    # explanation: If a critical alert is firing, suppress related warning alerts for same service

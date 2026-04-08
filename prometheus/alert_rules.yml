@@ -1,0 +1,51 @@
+groups:
+  - name: app_alerts
+    rules:
+      - alert: FlaskAppDown
+        expr: up{job="flask-app"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: flask-app
+        annotations:
+          summary: "Flask application is DOWN"
+          description: "The Flask app has been unreachable for more than 30 seconds."
+
+      - alert: TaskManagerDown
+        expr: up{job="task-manager"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: task-manager
+        annotations:
+          summary: "Task manager is DOWN"
+          description: "The task-manager backend has been unreachable for more than 30 seconds."
+
+  - name: infrastructure_alerts
+    rules:
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: prometheus
+        annotations:
+          summary: "Prometheus is DOWN"
+
+      - alert: AlertmanagerDown
+        expr: up{job="alertmanager"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: alertmanager
+        annotations:
+          summary: "Alertmanager is DOWN"
+
+      - alert: NodeExporterDown
+        expr: up{job="node-exporter"} == 0
+        for: 30s
+        labels:
+          severity: warning
+          service: node-exporter
+        annotations:
+          summary: "Node Exporter is DOWN"

@@ -1,0 +1,76 @@
+---
+# Self-Healing Playbook
+# Triggered by: webhook-receiver when Alertmanager fires FlaskAppDown alert
+# Purpose: Restart the failed Flask container
+
+- name: Self-Healing — Restart Failed Flask App
+  hosts: local
+  become: false    # No sudo needed — current user has Docker access
+
+  vars:
+    # Default container name — can be overridden via --extra-vars
+    target_container: "flask-app"
+    max_wait_seconds: 30
+
+  tasks:
+
+    - name: "📋 Log remediation start"
+      debug:
+        msg: "Starting self-healing for container: {{ target_container }} at {{ ansible_date_time.iso8601 }}"
+
+    - name: "🔍 Check current container state"
+      shell: "docker inspect --format='{{ '{{' }}.State.Status{{ '}}' }}' {{ target_container }} 2>&1"
+      register: container_state
+      changed_when: false
+      failed_when: false
+
+    - name: "📊 Show current container state"
+      debug:
+        msg: "Container '{{ target_container }}' is currently: {{ container_state.stdout }}"
+
+    - name: "🚀 Start the container if it is stopped or exited"
+      shell: "docker start {{ target_container }}"
+      register: start_result
+      when: container_state.stdout in ['exited', 'dead', 'created', 'paused']
+      changed_when: start_result.rc == 0
+
+    - name: "🔄 Restart the container if it is running but unhealthy"
+      shell: "docker restart {{ target_container }}"
+      register: restart_result
+      when: container_state.stdout == 'running'
+      changed_when: restart_result.rc == 0
+
+    - name: "⚠️  Handle case where container does not exist"
+      debug:
+        msg: >
+          Container '{{ target_container }}' was not found.
+          Manual intervention needed — re-run docker-compose up.
+      when: "'No such object' in container_state.stdout or 'Error' in container_state.stdout"
+
+    - name: "⏳ Wait for Flask app to become healthy"
+      uri:
+        url: "http://localhost:5000/health"
+        method: GET
+        status_code: 200
+      register: health_check
+      until: health_check.status == 200
+      retries: "{{ max_wait_seconds // 5 }}"    # Retry every 5 seconds
+      delay: 5
+      when: "'No such object' not in container_state.stdout"
+      failed_when: false
+
+    - name: "✅ Recovery successful"
+      debug:
+        msg: "Flask app is back online! Health check passed."
+      when:
+        - health_check is defined
+        - health_check.status is defined
+        - health_check.status == 200
+
+    - name: "❌ Recovery may have failed"
+      debug:
+        msg: "Warning: Health check did not pass within expected time. Check logs."
+      when:
+        - health_check is defined
+        - health_check.status is defined
+        - health_check.status != 200
