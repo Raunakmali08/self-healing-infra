@@ -85,6 +85,24 @@ body {
   font-weight: 600;
 }
 
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.panel-head h2 {
+  margin: 0;
+}
+
+.panel-copy {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .form-grid {
   display: grid;
   gap: 0.75rem;
@@ -166,6 +184,39 @@ textarea {
   gap: 0.75rem;
 }
 
+.query-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.query-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.query-title {
+  margin: 0 0 0.4rem;
+  font-weight: 600;
+}
+
+.query-code {
+  display: block;
+  overflow-x: auto;
+  color: #b8d3ff;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
 .task-card {
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -216,6 +267,15 @@ textarea {
   color: var(--muted);
   font-size: 0.9rem;
   white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .panel-head,
+  .query-card,
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .task-meta {

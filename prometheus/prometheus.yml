@@ -16,17 +16,15 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'flask-app'
-    scrape_interval: 10s
-    static_configs:
-      - targets: ['flask-app:5000']
-    metrics_path: '/metrics'
-
   - job_name: 'task-manager'
     scrape_interval: 10s
     static_configs:
       - targets: ['taskmgr-backend:3000']
     metrics_path: '/metrics'
+
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
 
   - job_name: 'node-exporter'
     static_configs:

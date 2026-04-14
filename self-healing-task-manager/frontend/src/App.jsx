@@ -6,6 +6,37 @@ import './App.css';
  * so the browser stays same-origin (no CORS headaches in production compose).
  */
 const API_BASE = '/api';
+const PROMETHEUS_GRAPH_BASE = 'http://127.0.0.1:9090/graph';
+const PROMETHEUS_QUERIES = [
+  {
+    title: 'Task Manager Status',
+    expr: 'up{job="task-manager"}',
+  },
+  {
+    title: 'Request Rate',
+    expr: 'sum by (route, status_code) (rate(http_requests_total{job="task-manager"}[5m]))',
+  },
+  {
+    title: 'Task List Latency (P95)',
+    expr: 'histogram_quantile(0.95, sum by (le) (rate(task_fetch_duration_seconds_bucket{job="task-manager"}[5m])))',
+  },
+  {
+    title: 'Success Rate %',
+    expr: '100 * (1 - (sum(rate(http_requests_total{job="task-manager",status_code=~"5.."}[5m])) / clamp_min(sum(rate(http_requests_total{job="task-manager"}[5m])), 1e-9)))',
+  },
+  {
+    title: 'Tasks Created Total',
+    expr: 'task_creation_total{job="task-manager"}',
+  },
+  {
+    title: 'DB Pool Size',
+    expr: 'db_connection_pool_size{job="task-manager"}',
+  },
+  {
+    title: 'DB Pool Idle',
+    expr: 'db_connection_pool_idle{job="task-manager"}',
+  },
+];
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -161,6 +192,36 @@ export default function App() {
             </button>
           </div>
         </form>
+      </section>
+
+      <section className="panel" aria-labelledby="prometheus-heading">
+        <div className="panel-head">
+          <h2 id="prometheus-heading">Prometheus graph queries</h2>
+          <a className="btn btn-ghost" href={PROMETHEUS_GRAPH_BASE} target="_blank" rel="noreferrer">
+            Open Prometheus
+          </a>
+        </div>
+        <p className="panel-copy">
+          These match the PromQL used by the Grafana task manager dashboard.
+        </p>
+        <ul className="query-list">
+          {PROMETHEUS_QUERIES.map((query) => (
+            <li key={query.title} className="query-card">
+              <div>
+                <p className="query-title">{query.title}</p>
+                <code className="query-code">{query.expr}</code>
+              </div>
+              <a
+                className="btn btn-ghost"
+                href={`${PROMETHEUS_GRAPH_BASE}?g0.expr=${encodeURIComponent(query.expr)}&g0.tab=0`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Open query
+              </a>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="panel" aria-labelledby="list-heading">

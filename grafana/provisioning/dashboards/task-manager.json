@@ -89,7 +89,7 @@
             "mode": "absolute",
             "steps": [{ "color": "green", "value": null }]
           },
-          "unit": "short"
+          "unit": "reqps"
         }
       },
       "gridPos": { "h": 6, "w": 8, "x": 8, "y": 0 },
@@ -100,8 +100,8 @@
       },
       "targets": [
         {
-          "expr": "rate(flask_http_request_total{job=\"task-manager\"}[5m])",
-          "legendFormat": "{{method}} {{endpoint}}",
+          "expr": "sum by (route, status_code) (rate(http_requests_total{job=\"task-manager\"}[5m]))",
+          "legendFormat": "{{route}} {{status_code}}",
           "refId": "A"
         }
       ],
@@ -151,12 +151,12 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, rate(flask_http_request_duration_seconds_bucket{job=\"task-manager\"}[5m]))",
-          "legendFormat": "P95 Latency",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(task_fetch_duration_seconds_bucket{job=\"task-manager\"}[5m])))",
+          "legendFormat": "GET /tasks p95",
           "refId": "A"
         }
       ],
-      "title": "Response Latency (P95)",
+      "title": "Task List Latency (P95)",
       "type": "timeseries"
     },
     {
@@ -171,9 +171,9 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 80 },
-              { "color": "red", "value": 95 }
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 95 },
+              { "color": "green", "value": 99 }
             ]
           },
           "unit": "percent"
@@ -195,7 +195,7 @@
       },
       "targets": [
         {
-          "expr": "rate(flask_http_request_total{status=~\"2..\",job=\"task-manager\"}[5m]) / rate(flask_http_request_total{job=\"task-manager\"}[5m]) * 100",
+          "expr": "100 * (1 - (sum(rate(http_requests_total{job=\"task-manager\",status_code=~\"5..\"}[5m])) / clamp_min(sum(rate(http_requests_total{job=\"task-manager\"}[5m])), 1e-9)))",
           "legendFormat": "Success Rate",
           "refId": "A"
         }
@@ -236,13 +236,69 @@
       },
       "targets": [
         {
-          "expr": "up{job=~\"flask-app|task-manager\"}",
-          "legendFormat": "{{job}}",
+          "expr": "task_creation_total{job=\"task-manager\"}",
+          "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ],
-      "title": "All Services Status",
+      "title": "Tasks Created Total",
       "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 6 },
+      "id": 6,
+      "options": {
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "expr": "db_connection_pool_size{job=\"task-manager\"}",
+          "legendFormat": "pool size",
+          "refId": "A"
+        },
+        {
+          "expr": "db_connection_pool_idle{job=\"task-manager\"}",
+          "legendFormat": "pool idle",
+          "refId": "B"
+        }
+      ],
+      "title": "DB Pool",
+      "type": "timeseries"
     }
   ],
   "refresh": "5s",
@@ -255,6 +311,6 @@
   "timezone": "",
   "title": "Task Manager Dashboard",
   "uid": "task-manager",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
