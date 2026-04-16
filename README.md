@@ -60,26 +60,26 @@ This project is built with different "LEGO pieces" that work together:
 ```
 Step 1: Monitoring
 ┌─────────────────────────────────────────────────────────────────┐
-│  Programs  ──────►  Prometheus  ──────►  Alertmanager          │
-│  (make metrics)       (collects)            (decides)          │
+│  Programs  ──────►  Prometheus  ──────►  Alertmanager           │
+│  (make metrics)       (collects)            (decides)           │
 └─────────────────────────────────────────────────────────────────┘
          │                                           │
          ▼                                           ▼
 ┌─────────────────┐                        ┌─────────────────────┐
 │     Loki        │                        │   Webhook Receiver  │
-│  (stores logs)  │                        │   (gets the alert)   │
+│  (stores logs)  │                        │   (gets the alert)  │
 └─────────────────┘                        └──────────┬──────────┘
                                                      │
                                                      ▼
-Step 2: Healing                              ┌─────────────────────┐
-┌─────────────────────────────────────────┐    │      Ansible        │
-│           Docker Container               │───►│  (does the fixing)  │
-│  ✅ Started! / ❌ Restarted!              │    └─────────────────────┘
+Step 2: Healing                                 ┌─────────────────────┐
+┌─────────────────────────────────────────┐     │      Ansible        │
+│           Docker Container              │───► │  (does the fixing)  │
+│  ✅ Started! / ❌ Restarted!            │     └─────────────────────┘
 └─────────────────────────────────────────┘
 
 Step 3: Notifying
 ┌─────────────────────────────────────────────────────────────────┐
-│  Alertmanager  ──────►  Telegram Bot  ──────►  Your Phone 📱   │
+│  Alertmanager  ──────►  Telegram Bot  ──────►  Your Phone 📱    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -359,8 +359,7 @@ Think of it like instructions for how to arrange and connect multiple Docker box
 
 ## 📝 License
 
-This is a demonstration project for learning about self-healing infrastructure.
-
+MIT
 ---
 
 ## 🙏 Credits
