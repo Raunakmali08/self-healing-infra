@@ -358,10 +358,5 @@ Think of it like instructions for how to arrange and connect multiple Docker box
 ---
 
 ## 📝 License
+MIT License
 
-MIT
----
-
-## 🙏 Credits
-
-Built with ❤️ using Prometheus, Grafana, Loki, Alertmanager, Ansible, Flask, React, and Docker.
